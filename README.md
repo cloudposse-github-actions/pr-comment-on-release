@@ -1,1 +1,2 @@
-# pr-comment-on-release
+# example-github-action-composite
+Template repository for composite GitHub action
