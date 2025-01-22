@@ -4,12 +4,7 @@
 
 | Name | Description | Default | Required |
 |------|-------------|---------|----------|
-| param1 | Input parameter placeholder | true | true |
+| retries | Number of retries | 3 | false |
 
 
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| result1 | Output result placeholder |
 <!-- markdownlint-restore -->
