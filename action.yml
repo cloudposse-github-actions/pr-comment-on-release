@@ -1,23 +1,141 @@
-name: 'Example composite GitHub action'
-description: 'Example composite GitHub action'
+name: "PR Comment on Release"
+description: "Comments on a (merged) PR when it is included in a GitHub release."
 author: hello@cloudposse.com
 branding:
-  icon: 'file'
-  color: 'white'
+  icon: "file"
+  color: "white"
 inputs:
-  param1:
-    required: true
-    description: "Input parameter placeholder"
-    default: "true"
-outputs:
-  result1:
-    description: "Output result placeholder"
-    value: "${{ steps.context.outputs.action-result }}"
+  retries:
+    required: false
+    description: "Number of retries"
+    default: "3"
 runs:
   using: "composite"
   steps:
-    - id: context
-      shell: bash
-      run: |
-          echo "action-result=${{ inputs.param1 }}" >> $GITHUB_OUTPUT
+    - uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        retries: 3
+        script: |
+          // Function to check if a value is unique in an array
+          function onlyUnique(value, index, array) {
+            return array.indexOf(value) === index;
+          }
 
+          // Function to create or update a comment for a pull request (PR) associated with a release
+          async function createCommentForPR(pr_id, release) {
+            // Parameters for fetching comments related to the PR
+            const parameters = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr_id,
+              per_page: 100,
+            }
+            
+            // Constructing the message to be posted or updated as a comment
+            const messageId = `<!-- release-pr-comment:${release.id} -->`;
+            const message = `
+            ${messageId}
+            These changes were released in [${release.name}](${release.html_url}).
+            `;
+            
+            // Сreate a new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr_id,
+              body: message
+            });
+          }
+
+          // Retrieving the ID of the current release
+          release_id = context.payload.release.id;
+
+          // Fetching details of the current release
+          currentReleaseResponse = await github.rest.repos.getRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,            
+            release_id,
+          });
+
+          currentRelease = currentReleaseResponse.data;
+
+          // Extracting tag name and target branch from the current release
+          currentTag = currentRelease.tag_name;
+          currentBranch = currentRelease.target_commitish;
+
+          // Listing all releases of the repository
+          releases = await github.rest.repos.listReleases({
+            owner: context.repo.owner,
+            repo: context.repo.repo,            
+          });
+
+          // Initializing variables for storing information about the previous release
+          previousRelease = null;
+          currentReleaseFound = false;  
+
+          // Iterating through releases to find the previous release relative to the current one
+          for (release of releases.data) {
+            if (currentReleaseFound) {
+              previousRelease = release;
+              break;
+            } else if (release.tag_name == currentTag) {
+              currentReleaseFound = true;
+            }
+          }
+
+          // If no previous release is found, log a message and return
+          if (previousRelease == null) {
+            console.log(`No previous release found for ${currentTag}`);
+            return;
+          }
+
+          // Comparing commits between the current and previous releases
+          commitsResponse = await github.rest.repos.compareCommits({
+            owner: context.repo.owner,
+            repo: context.repo.repo,            
+            base: previousRelease.tag_name,
+            head: currentRelease.tag_name,
+          });
+
+          commits = commitsResponse.data;
+
+          // Initializing an array to store pull request numbers associated with the commits
+          pull_requests = [];
+
+          // Iterating through commits to find associated pull requests and extracting their numbers
+          for (commit of commits.commits) {
+            responseCommit = await github.rest.git.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,            
+              commit_sha: commit.sha,
+            });
+
+            // GraphQL query to fetch details about the commit, including associated pull requests
+            const query = `
+              {
+                resource(url: "${context.payload.repository.html_url}/commit/${commit.sha}") {
+                  ... on Commit {
+                    messageHeadlineHTML
+                    messageBodyHTML
+                    associatedPullRequests(first: 10) {
+                      pageInfo { hasNextPage }
+                      edges { node { number } }
+                    }
+                  }
+                }
+              }
+            `;
+
+            response = await github.graphql(query);
+
+            // Extracting pull request numbers from the GraphQL response
+            for (edge of response.resource.associatedPullRequests.edges) {
+              pull_requests.push(edge.node.number);
+            }
+          }            
+
+          // Iterating through unique pull request numbers and creating or updating comments for them
+          for (id of pull_requests.filter(onlyUnique)) {
+            await createCommentForPR(id, currentRelease);
+          }

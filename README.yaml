@@ -5,7 +5,7 @@
 #
 
 # Name of this project
-name: example-github-action-composite
+name: pr-comment-on-release
 
 # Tags of this project
 tags:
@@ -18,7 +18,7 @@ tags:
 license: "APACHE2"
 
 # Canonical GitHub repo
-github_repo: cloudposse/example-github-action-composite
+github_repo: cloudposse-github-actions/pr-comment-on-release
 
 # Badges to display
 badges:
@@ -32,41 +32,43 @@ badges:
 related: []
 
 # Short description of this project
-description: Template repository of composite GitHub Action
+description: Comments on a (merged) PR when it is included in a GitHub release.
 
 introduction: |-
-  This is template repository to create composite GitHub Actions. 
-  Feel free to use it as reference and starting point.
+  This composite action comments on a (merged) Pull Request when it is included in a GitHub release.
 
 references:
-  - name: "github-actions-workflows"
+  - name: "cloudposse-github-actions"
     description: "Reusable workflows for different types of projects"
-    url: "https://github.com/cloudposse/github-actions-workflows"
-  - name: "example-github-action-release-workflow"
+    url: "https://github.com/cloudposse-github-actions"
+  - name: "pr-comment-on-release"
     description: "Example application with complicated release workflow"
-    url: "https://github.com/cloudposse/example-github-action-release-workflow"
+    url: "https://github.com/cloudposse-github-actions/pr-comment-on-release"
 
 # How to use this project
 usage: |-
   ```yaml
-    name: Pull Request
+    name: PR Comment on Release
+    
     on:
-      pull_request:
-        branches: [ 'main' ]
-        types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+      release:
+        types: [published]
+    
+    permissions:
+      deployments: write
+      id-token: write
+      contents: write
+      pull-requests: write
 
     jobs:
       context:
         runs-on: ubuntu-latest
         steps:
-          - name: Example action
-            uses: cloudposse/example-github-action-composite@main
-            id: example
+          - name: Comment on Release
+            uses: cloudposse-github-actions/pr-comment-on-release
+            id: pr-comment-on-release
             with:
-              param1: true
-  
-        outputs:
-          result: ${{ steps.example.outputs.result1 }}
+              retries: 5 # Override number of retries
   ```
 
 include:
@@ -74,5 +76,5 @@ include:
 
 # Contributors to this project
 contributors:
-  - name: "Igor Rodionov"
-    github: "goruha"
+  - name: "Yoni Koren"
+    github: "korenyoni"
