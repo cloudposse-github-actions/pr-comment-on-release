@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: gh release create v1.0.0-test-${{ github.sha }} --prerelease
+      - run: gh release create v1.0.0-test-${{ github.sha }} --prerelease --target ${{ github.sha }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
