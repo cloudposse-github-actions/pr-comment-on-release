@@ -17,14 +17,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: gh release create test-${{ github.sha }} --prerelease
+      - run: gh release create v1.0.0-test-${{ github.sha }} --prerelease
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: ./
         id: current
         with:
-          include_regex: "/test-*./g"
+          include_regex: "/v1\\.0\\.0-test-*./g"
 
   assert:
     runs-on: ubuntu-latest
@@ -42,6 +42,6 @@ jobs:
     needs: [assert]
     if: ${{ always() }}
     steps:
-      - run: gh release delete test-${{ github.sha }}
+      - run: gh release delete v1.0.0-test-${{ github.sha }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
