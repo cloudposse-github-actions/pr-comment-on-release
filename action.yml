@@ -9,6 +9,10 @@ inputs:
     required: false
     description: "Number of retries"
     default: "3"
+  include_regex:
+    required: false
+    description: "JavaScript regex used to filter releases."
+    default: "/.*/g"
 runs:
   using: "composite"
   steps:
@@ -74,8 +78,11 @@ runs:
           previousRelease = null;
           currentReleaseFound = false;  
 
+          // Filter releases
+          const releasesFiltered = releases.data(({release}) => release.match(${{ inputs.include_regex }})); 
+
           // Iterating through releases to find the previous release relative to the current one
-          for (release of releases.data) {
+          for (release of releasesFiltered) {
             if (currentReleaseFound) {
               previousRelease = release;
               break;
