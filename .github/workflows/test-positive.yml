@@ -20,17 +20,17 @@ jobs:
       - id: sha-short
         run: echo "result=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - run: gh release create v0.1.0-test.${{ steps.sha-short.outputs.result }} --prerelease --target ${{ github.sha }} --notes "Prerelease used for tests (will be automatically deleted)."
+      - run: gh release create v0.0.0-test.${{ steps.sha-short.outputs.result }} --prerelease --target ${{ github.sha }} --notes "Prerelease used for tests (will be automatically deleted)."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: ./
         id: current
         with:
-          include_regex: "/v0\\.1\\.0-test\\.*./g"
+          include_regex: "/v0\\.0\\.0-test\\.*./g"
 
     outputs:
-      release: v0.1.0-test.${{ steps.sha-short.outputs.result }}
+      release: v0.0.0-test.${{ steps.sha-short.outputs.result }}
 
   assert:
     runs-on: ubuntu-latest
