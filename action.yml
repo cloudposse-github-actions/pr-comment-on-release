@@ -13,21 +13,21 @@ inputs:
     required: false
     description: "JavaScript regex used to filter releases."
     default: "/.*/g"
-  release_id:
+  tag:
     required: false
-    description: "The ID of the release. Defaults to `github.event.release.id`."
+    description: "The git tag used to determine the release. If omitted, the release will be determined from `github.event.release.id`."
     default: ""
 runs:
   using: "composite"
   steps:
     - uses: actions/github-script@v7
       env:
-        INPUT_RELEASE_ID: ${{ inputs.release_id }}
+        TAG: ${{ inputs.release_id }}
       with:
         result-encoding: string
         retries: ${{ inputs.retries }}
         script: |
-          const { INPUT_RELEASE_ID } = process.env
+          const { TAG } = process.env
 
           switch(context.eventName) {
             case ('release'):
@@ -35,8 +35,8 @@ runs:
             case ('workflow_run'):
               core.warning("This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.");
               break;
-            case ('pull_request' && INPUT_RELEASE_ID):
-              core.error("This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'release_id' was not supplied.");
+            case ('pull_request' && INPUT_RELEASE_NAME):
+              core.error("This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'tag' was not supplied.");
               break;
             case ('pull_request'):
               core.warning("This action is meant to only run on 'release'. 'pull_request' is reserved for testing.");
@@ -76,21 +76,23 @@ runs:
             });
           }
 
-          releaseID = INPUT_RELEASE_ID;
-          if (!releaseID) {
-            console.log("Fetching release ID from GitHub context...");
-            releaseID = context.payload.release.id;
-            console.log(`Release ID: releaseID`);
-          } else {
-            console.log(`Using supplied 'release_id': ${releaseID}`);
-          }
+          releaseTag = TAG;
+          releaseID = null;
 
-          // Fetching details of the current release
-          currentReleaseResponse = await github.rest.repos.getRelease({
-            owner: context.repo.owner,
-            repo: context.repo.repo,            
-            releaseID,
-          });
+          if (releaseTag) {
+            currentReleaseResponse = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,            
+              releaseTag,
+            }); 
+          } else {
+            releaseID = context.payload.release.id;
+            currentReleaseResponse = await github.rest.repos.getRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,            
+              releaseID,
+            });
+          }
 
           currentRelease = currentReleaseResponse.data;
 

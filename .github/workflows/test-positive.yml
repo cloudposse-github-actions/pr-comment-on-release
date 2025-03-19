@@ -22,7 +22,7 @@ jobs:
           release_name="${PREFIX}$(git rev-parse --short HEAD)"
           gh release create ${release_name} --prerelease --target ${{ github.sha }} --notes "Created by ${{ github.workflow }} (will be automatically deleted)."
           echo "name=${release_name}" > $GITHUB_OUTPUT
-          echo "id=$(gh release view ${release_name} --json id -q '.id')" >> $GITHUB_OUTPUT
+          echo "tag=$(gh release view ${release_name} --json tagName -q '.tagName')" >> $GITHUB_OUTPUT
         env:
           # Below is the main difference between this workflow's negative counterpart.
           # The action _will_ pick up a comment because the provided 'include_regex' will be able to match it.
@@ -31,7 +31,7 @@ jobs:
 
     outputs:
       name: ${{ steps.create-release.outputs.name }}
-      id: ${{ steps.create-release.outputs.id }}
+      tag: ${{ steps.create-release.outputs.tag }}
 
   assert:
     runs-on: ubuntu-latest
@@ -42,7 +42,7 @@ jobs:
 
       - uses: ./
         with:
-          release_id: ${{ needs.create-release.outputs.id}}
+          tag: ${{ needs.create-release.outputs.tag }}
           include_regex: "/v0\\.0\\.0-test\\.include\\.*./g" # Should not find a comment
 
       - name: Find Comment (should pass)
