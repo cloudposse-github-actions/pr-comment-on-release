@@ -75,7 +75,7 @@ runs:
           }
 
           releaseID = core.getInput("release_id")
-          if (!releaseId) {
+          if (!releaseID) {
             releaseID = context.payload.release.id;
           }
 
