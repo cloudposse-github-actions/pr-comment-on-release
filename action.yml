@@ -25,7 +25,7 @@ runs:
         result-encoding: string
         retries: ${{ inputs.retries }}
         env:
-          RELEASE_ID: ${{ inputs.release_id }}
+          INPUT_RELEASE_ID: ${{ inputs.release_id }}
         script: |
           const { INPUT_RELEASE_ID } = process.env
 
