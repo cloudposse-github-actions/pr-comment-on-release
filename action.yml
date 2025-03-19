@@ -22,7 +22,7 @@ runs:
   steps:
     - uses: actions/github-script@v7
       env:
-        TAG: ${{ inputs.release_id }}
+        TAG: ${{ inputs.tag }}
       with:
         result-encoding: string
         retries: ${{ inputs.retries }}
@@ -30,18 +30,18 @@ runs:
           const { TAG } = process.env
 
           switch(context.eventName) {
-            case ('release' && TAG):
+            case ('release' && TAG != ""):
               core.warning(`'tag' is reserved for testing and is not needed when running on 'release'. The release will be determined using the supplied 'tag' (${TAG}).`);
               break;
-            case ('release'):
+            case ('release' && TAG == ""):
               break;
             case ('workflow_run'):
               core.warning(`This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.`);
               break;
-            case ('pull_request' && !TAG):
+            case ('pull_request' && TAG == ""):
               core.error(`This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'tag' was not supplied.`);
               break;
-            case ('pull_request'):
+            case ('pull_request' && TAG != ""):
               core.warning(`This action is meant to only run on 'release'. 'pull_request' is reserved for testing. Release will be fetched using ${TAG}`);
               break;
             default:
@@ -83,7 +83,7 @@ runs:
           releaseID = null;
           currentRelease = null;
 
-          if (releaseTag) {
+          if (releaseTag != "") {
             console.log(`Fetching release using supplied 'tag' input (${releaseTag})...`);
             currentRelease = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
