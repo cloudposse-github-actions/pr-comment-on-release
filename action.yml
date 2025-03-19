@@ -42,7 +42,7 @@ runs:
               if (TAG === "") {
                 core.setFailed(`This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'tag' was not supplied.`);
               }
-              core.warning(`This action is meant to only run on 'release'. 'pull_request' is reserved for testing. Release will be fetched using ${TAG}`);
+              core.warning(`This action is meant to only run on 'release'. 'pull_request' is reserved for testing. Release will be fetched using ${TAG}.`);
               break;
             default:
               core.setFailed(`The ${context.eventName} event is not supported by this action.`);
@@ -79,24 +79,21 @@ runs:
             });
           }
 
-          releaseTag = TAG;
-          releaseID = null;
           currentReleaseResponse = null;
 
-          if (releaseTag != "") {
-            console.log(`Fetching release using supplied 'tag' input (${releaseTag})...`);
+          if (TAG != "") {
+            console.log(`Fetching release using supplied 'tag' input (${TAG})...`);
             currentReleaseResponse = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,            
-              tag: releaseTag,
+              tag: TAG,
             }); 
           } else {
             console.log("Fetching release using 'release' event payload...");
-            releaseID = context.payload.release.id;
             currentReleaseResponse = await github.rest.repos.getRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,            
-              releaseID,
+              release_id: context.payload.release.id,
             });
           }
           currentRelease = currentReleaseResponse.data;
