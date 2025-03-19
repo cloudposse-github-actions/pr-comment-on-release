@@ -10,7 +10,11 @@ permissions:
 
 jobs:
   pr-comment-on-release:
-    if: "startsWith(github.event.name , 'v0.0.0-test')" # Match only releases created by test-include.yml and test-exclude.yml
-    uses: ./action.yml
-    with:
-      include_regex: "/v0\\.0\\.0-test-include\\.*./g" # Only include releases created by test-include.yml
+    runs-on: ubuntu-default
+    if: "startsWith(github.event.name , 'v0.0.0-test.')" # Match only releases created by test-include.yml and test-exclude.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./
+        with:
+          include_regex: "/v0\\.0\\.0-test-include\\.*./g" # Only include releases created by test-include.yml
