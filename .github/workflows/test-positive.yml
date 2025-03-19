@@ -1,0 +1,62 @@
+name: Test Positive
+on:
+  pull_request: {}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup
+        run: echo "Do setup"
+
+  create-release:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    needs: [setup]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - id: create-release
+        run: |
+          release_name="${PREFIX}$(git rev-parse --short HEAD)"
+          gh release create ${release_name} --prerelease --target ${{ github.sha }} --notes "Created by ${{ github.workflow }} (will be automatically deleted)."
+          echo "name=${release_name}" > $GITHUB_OUTPUT
+          echo "id=$(gh release view v0.0.0-test.exclude.${{ steps.sha-short.outputs.result }} --json id -q '.id')" >> $GITHUB_OUTPUT
+        env:
+          # Below is the main difference between this workflow's negative counterpart.
+          # The action _will_ pick up a comment because the provided 'include_regex' will be able to match it.
+          PREFIX: "v0.0.0-test.include."
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    outputs:
+      name: ${{ steps.create-release.outputs.name }}
+      id: ${{ steps.create-release.outputs.id }}
+
+  assert:
+    runs-on: ubuntu-latest
+    needs: [create-release]
+    timeout-minutes: 5 # Timeout for test release workflow to run
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./
+        with:
+          release_id: ${{ needs.create-release.outputs.name}}
+          include_regex: "/v0\\.0\\.0-test\\.include\\.*./g" # Should not find a comment
+
+      - name: Find Comment (should pass)
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-regex: "^These changes were released in .*${{ needs.create-release.outputs.name}}.*$"
+
+  teardown:
+    runs-on: ubuntu-latest
+    needs: [create-release, assert]
+    if: ${{ always() }}
+    steps:
+      - run: gh release delete ${{ needs.test.outputs.release }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

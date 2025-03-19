@@ -13,6 +13,10 @@ inputs:
     required: false
     description: "JavaScript regex used to filter releases."
     default: "/.*/g"
+  release_id:
+    required: false
+    description: "The ID of the release. Defaults to `github.event.release.id`."
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -21,6 +25,25 @@ runs:
         result-encoding: string
         retries: ${{ inputs.retries }}
         script: |
+          isReleaseEvent = false;
+          switch(context.eventName) {
+            case ('release'):
+              isReleaseEvent = true;
+              break;
+            case ('workflow_run'):
+              console.log("warning::This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.");
+              break;
+            case ('pull_request'):
+              console.log("warning::This action is meant to only run on 'release'. 'pull_request' is reserved for testing.");
+              break;
+            default:
+              throw new Error(`Unsupported event: ${context.eventName}`);
+          }
+
+          if (context.eventName === 'pull_request' && length("${{ inputs.release_id }}") === 0) {
+              throw new Error(`Event is ${context.eventName} but inputs.release_id is not provided.`);
+          }
+
           // Function to check if a value is unique in an array
           function onlyUnique(value, index, array) {
             return array.indexOf(value) === index;
@@ -53,7 +76,11 @@ runs:
           }
 
           // Retrieving the ID of the current release
-          release_id = context.payload.release.id;
+          if (length("${{ inputs.release_id }}") > 0) {
+            release_id = "${{ inputs.release_id }}"; 
+          } else {
+            release_id = context.payload.release.id;
+          }
 
           // Fetching details of the current release
           currentReleaseResponse = await github.rest.repos.getRelease({
