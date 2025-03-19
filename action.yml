@@ -116,7 +116,7 @@ runs:
           // Filter releases
           // TODO: remove below line
           console.log(releases.data);
-          const releasesFiltered = releases.data.filter(({release}) => release.tag_name.match(INCLUDE_REGEX)); 
+          const releasesFiltered = releases.data.filter(release => release.tag_name.match(INCLUDE_REGEX); 
 
           // Iterating through releases to find the previous release relative to the current one
           for (release of releasesFiltered) {
