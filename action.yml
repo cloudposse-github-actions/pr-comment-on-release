@@ -74,16 +74,16 @@ runs:
             });
           }
 
-          releaseId = core.getInput("release_id")
+          releaseID = core.getInput("release_id")
           if (!releaseId) {
-            release_id = context.payload.release.id;
+            releaseID = context.payload.release.id;
           }
 
           // Fetching details of the current release
           currentReleaseResponse = await github.rest.repos.getRelease({
             owner: context.repo.owner,
             repo: context.repo.repo,            
-            release_id,
+            releaseID,
           });
 
           currentRelease = currentReleaseResponse.data;
