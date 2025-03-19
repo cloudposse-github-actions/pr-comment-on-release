@@ -35,7 +35,7 @@ runs:
             case ('workflow_run'):
               core.warning("This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.");
               break;
-            case ('pull_request' && INPUT_RELEASE_NAME):
+            case ('pull_request' && TAG):
               core.error("This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'tag' was not supplied.");
               break;
             case ('pull_request'):
