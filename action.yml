@@ -31,13 +31,16 @@ runs:
               isReleaseEvent = true;
               break;
             case ('workflow_run'):
-              console.log("warning::This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.");
+              core.warning("This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.");
+              break;
+            case ('pull_request') && !core.getInput("release_id"):
+              core.error("This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'release_id' was not supplied.");
               break;
             case ('pull_request'):
-              console.log("warning::This action is meant to only run on 'release'. 'pull_request' is reserved for testing.");
+              core.warning("This action is meant to only run on 'release'. 'pull_request' is reserved for testing.");
               break;
             default:
-              throw new Error(`Unsupported event: ${context.eventName}`);
+              core.error(`The ${context.eventName} event is not supported by this action.`);
           }
 
           if (context.eventName === 'pull_request' && length("${{ inputs.release_id }}") === 0) {
@@ -75,10 +78,8 @@ runs:
             });
           }
 
-          // Retrieving the ID of the current release
-          if (length("${{ inputs.release_id }}") > 0) {
-            release_id = "${{ inputs.release_id }}"; 
-          } else {
+          releaseId = core.getInput("release_id")
+          if (!releaseId) {
             release_id = context.payload.release.id;
           }
 
