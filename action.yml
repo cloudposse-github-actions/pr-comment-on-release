@@ -100,8 +100,6 @@ runs:
             }).data;
           }
 
-          currentRelease = currentReleaseResponse.data;
-
           // Extracting tag name and target branch from the current release
           currentTag = currentRelease.tag_name;
           currentBranch = currentRelease.target_commitish;
