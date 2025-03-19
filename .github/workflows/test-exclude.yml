@@ -38,7 +38,7 @@ jobs:
 
       - run: |
           # Wait until a release workflow whose tag is tied to this PR's SHA is running
-          while [[ $(gh run list -w "Test Release" --json databaseId -q 'length' -s completed -c ${{ github.sha }}) -eq 0 ]]; do
+          while [[ $(gh run list -w "Test Excluded Regex" --json databaseId -q 'length' -s completed -c ${{ github.sha }}) -eq 0 ]]; do
             sleep 5
           done
         env:
