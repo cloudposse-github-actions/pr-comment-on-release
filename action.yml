@@ -21,11 +21,11 @@ runs:
   using: "composite"
   steps:
     - uses: actions/github-script@v7
+      env:
+        INPUT_RELEASE_ID: ${{ inputs.release_id }}
       with:
         result-encoding: string
         retries: ${{ inputs.retries }}
-        env:
-          INPUT_RELEASE_ID: ${{ inputs.release_id }}
         script: |
           const { INPUT_RELEASE_ID } = process.env
 
