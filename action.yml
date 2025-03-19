@@ -43,10 +43,6 @@ runs:
               core.error(`The ${context.eventName} event is not supported by this action.`);
           }
 
-          if (context.eventName === 'pull_request' && length("${{ inputs.release_id }}") === 0) {
-              throw new Error(`Event is ${context.eventName} but inputs.release_id is not provided.`);
-          }
-
           // Function to check if a value is unique in an array
           function onlyUnique(value, index, array) {
             return array.indexOf(value) === index;
