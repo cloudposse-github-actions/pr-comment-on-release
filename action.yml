@@ -25,10 +25,8 @@ runs:
         result-encoding: string
         retries: ${{ inputs.retries }}
         script: |
-          isReleaseEvent = false;
           switch(context.eventName) {
             case ('release'):
-              isReleaseEvent = true;
               break;
             case ('workflow_run'):
               core.warning("This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.");
@@ -74,9 +72,11 @@ runs:
             });
           }
 
-          releaseID = core.getInput("release_id")
+          releaseID = core.getInput("release_id");
           if (!releaseID) {
             releaseID = context.payload.release.id;
+          } else {
+            core.log(`Using supplied 'release_id': releaseID`);
           }
 
           // Fetching details of the current release
