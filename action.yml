@@ -24,6 +24,7 @@ runs:
       with:
         result-encoding: string
         retries: ${{ inputs.retries }}
+        release_id: ${{ inputs.release_id }} # https://github.com/actions/github-script/blob/3908079ba1e7bce10117ad701c321d07e89017a9/.github/workflows/integration.yml#L23
         script: |
           switch(context.eventName) {
             case ('release'):
