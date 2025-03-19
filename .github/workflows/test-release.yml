@@ -1,0 +1,28 @@
+# TODO: remove the below comment:
+# This workflow needs to be merged as a test workflow prior to the implementation code being merged.
+# actions/checkout should infer its 'ref' input and check out the repo using the tag associated with the test release.
+name: Test Release
+on:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  debug:
+    runs-on: ubuntu-default
+    steps:
+      - run: echo ${{ toJSON(github.event) }}
+
+  pr-comment-on-release:
+    runs-on: ubuntu-default
+    if: "startsWith(github.event.release.name, 'v0.0.0-test.')" # Match only releases created by test-include.yml and test-exclude.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./
+        with:
+          include_regex: "/v0\\.0\\.0-test\\.include\\.*./g" # Only include releases created by test-include.yml
