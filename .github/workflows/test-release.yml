@@ -22,7 +22,7 @@ jobs:
 
   pr-comment-on-release:
     runs-on: ubuntu-latest
-    if: "startsWith(github.event.release.name, 'v0.0.0-test.')" # Match only releases created by test-include.yml and test-exclude.yml
+    if: "startsWith(github.event.release.name, 'v0.0.0-test.')" # Match releases created by both test-include.yml and test-exclude.yml
     steps:
       - uses: actions/checkout@v4
 
