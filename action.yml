@@ -30,22 +30,22 @@ runs:
           const { TAG } = process.env
 
           switch(context.eventName) {
-            case ('release' && TAG != ""):
-              core.warning(`'tag' is reserved for testing and is not needed when running on 'release'. The release will be determined using the supplied 'tag' (${TAG}).`);
-              break;
-            case ('release' && TAG == ""):
+            case ('release'):
+              if (TAG != "") {
+                core.warning(`'tag' is reserved for testing and is not needed when running on 'release'. The release will be determined using the supplied 'tag' (${TAG}).`);
+              }
               break;
             case ('workflow_run'):
               core.warning(`This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.`);
               break;
-            case ('pull_request' && TAG == ""):
-              core.error(`This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'tag' was not supplied.`);
-              break;
-            case ('pull_request' && TAG != ""):
+            case ('pull_request'):
+              if (TAG === "") {
+                core.setFailed(`This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'tag' was not supplied.`);
+              }
               core.warning(`This action is meant to only run on 'release'. 'pull_request' is reserved for testing. Release will be fetched using ${TAG}`);
               break;
             default:
-              core.error(`The ${context.eventName} event is not supported by this action.`);
+              core.setFailed(`The ${context.eventName} event is not supported by this action.`);
           }
 
           // Function to check if a value is unique in an array
@@ -81,24 +81,25 @@ runs:
 
           releaseTag = TAG;
           releaseID = null;
-          currentRelease = null;
+          currentReleaseResponse = null;
 
           if (releaseTag != "") {
             console.log(`Fetching release using supplied 'tag' input (${releaseTag})...`);
-            currentRelease = await github.rest.repos.getReleaseByTag({
+            currentReleaseResponse = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,            
               tag: releaseTag,
-            }).data; 
+            }); 
           } else {
             console.log("Fetching release using 'release' event payload...");
             releaseID = context.payload.release.id;
-            currentRelease = await github.rest.repos.getRelease({
+            currentReleaseResponse = await github.rest.repos.getRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,            
               releaseID,
-            }).data;
+            });
           }
+          currentRelease = currentReleaseResponse.data;
 
           // Extracting tag name and target branch from the current release
           currentTag = currentRelease.tag_name;
