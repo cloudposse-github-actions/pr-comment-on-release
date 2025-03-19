@@ -115,7 +115,7 @@ runs:
 
           // Filter releases
           // TODO: remove log from filter function
-          const releasesFiltered = releases.data.filter(release => console.log(`does ${release.tag_name} fall under ${INCLUDE_REGEX}?`) || release.tag_name.match(INCLUDE_REGEX)); 
+          const releasesFiltered = releases.data.filter(release => console.log(`does ${release.tag_name} fall under ${INCLUDE_REGEX}?: ${release.tag_name.match(INCLUDE_REGEX)}`) || release.tag_name.match(INCLUDE_REGEX)); 
           console.log(releasesFiltered); // TODO: remove debug log
 
           // Iterating through releases to find the previous release relative to the current one
