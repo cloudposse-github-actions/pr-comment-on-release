@@ -24,15 +24,18 @@ runs:
       with:
         result-encoding: string
         retries: ${{ inputs.retries }}
-        release_id: ${{ inputs.release_id }} # https://github.com/actions/github-script/blob/3908079ba1e7bce10117ad701c321d07e89017a9/.github/workflows/integration.yml#L23
+        env:
+          RELEASE_ID: ${{ inputs.release_id }}
         script: |
+          const { INPUT_RELEASE_ID } = process.env
+
           switch(context.eventName) {
             case ('release'):
               break;
             case ('workflow_run'):
               core.warning("This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.");
               break;
-            case ('pull_request') && !core.getInput("release_id"):
+            case ('pull_request' && RELEASE_ID):
               core.error("This action is meant to only run on 'release'. 'pull_request' is reserved for testing, and 'release_id' was not supplied.");
               break;
             case ('pull_request'):
@@ -73,7 +76,7 @@ runs:
             });
           }
 
-          releaseID = core.getInput("release_id");
+          releaseID = INPUT_RELEASE_ID;
           if (!releaseID) {
             console.log("Fetching release ID from GitHub context...");
             releaseID = context.payload.release.id;
