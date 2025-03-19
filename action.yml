@@ -81,7 +81,7 @@ runs:
           currentRelease = null;
 
           if (releaseTag) {
-            console.log("Fetching release using supplied 'tag' input...");
+            console.log(`Fetching release using supplied 'tag' input (${releaseTag})...`);
             currentRelease = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,            
