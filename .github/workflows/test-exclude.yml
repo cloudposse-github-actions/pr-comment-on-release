@@ -21,13 +21,13 @@ jobs:
         run: echo "result=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       # Below is the only difference between test-include.yml (the positive counterpart of this workflow).
-      # test-release.yml will not pick up this comment because include_regex will only match a 'v0.0.0-test-include' prefix.
-      - run: gh release create v0.0.0-test-exclude.${{ steps.sha-short.outputs.result }} --prerelease --target ${{ github.sha }} --notes "Prerelease used for tests (will be automatically deleted)."
+      # test-release.yml will not pick up this comment because include_regex will only match a 'v0.0.0-test.include' prefix.
+      - run: gh release create v0.0.0-test.exclude.${{ steps.sha-short.outputs.result }} --prerelease --target ${{ github.sha }} --notes "Prerelease used for tests (will be automatically deleted)."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     outputs:
-      release: v0.0.0-test-exclude.${{ steps.sha-short.outputs.result }}
+      release: v0.0.0-test.exclude.${{ steps.sha-short.outputs.result }}
 
   assert:
     runs-on: ubuntu-latest
