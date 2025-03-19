@@ -42,7 +42,7 @@ jobs:
 
       - uses: ./
         with:
-          release_id: ${{ needs.create-release.outputs.name}}
+          release_id: ${{ needs.create-release.outputs.id}}
           include_regex: "/v0\\.0\\.0-test\\.include\\.*./g" # Should not find a comment
 
       - name: Find Comment (should fail)
