@@ -82,7 +82,7 @@ runs:
             releaseID = context.payload.release.id;
             console.log(`Release ID: releaseID`);
           } else {
-            console.log(`Using supplied 'release_id': releaseID`);
+            console.log(`Using supplied 'release_id': ${releaseID}`);
           }
 
           // Fetching details of the current release
