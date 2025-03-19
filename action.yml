@@ -113,7 +113,7 @@ runs:
           currentReleaseFound = false;  
 
           // Filter releases
-          const releasesFiltered = releases.data.filter(({release}) => release.match(${{ inputs.include_regex }})); 
+          const releasesFiltered = releases.data.filter(({release}) => release.name.match(${{ inputs.include_regex }})); 
 
           // Iterating through releases to find the previous release relative to the current one
           for (release of releasesFiltered) {
