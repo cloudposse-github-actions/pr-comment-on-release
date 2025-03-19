@@ -74,11 +74,11 @@ runs:
 
           releaseID = core.getInput("release_id");
           if (!releaseID) {
-            core.log("Fetching release ID from GitHub context...");
+            console.log("Fetching release ID from GitHub context...");
             releaseID = context.payload.release.id;
-            core.log(`Release ID: releaseID`);
+            console.log(`Release ID: releaseID`);
           } else {
-            core.log(`Using supplied 'release_id': releaseID`);
+            console.log(`Using supplied 'release_id': releaseID`);
           }
 
           // Fetching details of the current release
