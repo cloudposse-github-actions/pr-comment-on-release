@@ -81,14 +81,14 @@ runs:
           currentRelease = null;
 
           if (releaseTag) {
-            console.log("Fetching release using supplied 'tag' input..."
+            console.log("Fetching release using supplied 'tag' input...");
             currentRelease = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,            
               releaseTag,
             }).data; 
           } else {
-            console.log("Fetching release using 'release' event payload..."
+            console.log("Fetching release using 'release' event payload...");
             releaseID = context.payload.release.id;
             currentRelease = await github.rest.repos.getRelease({
               owner: context.repo.owner,
