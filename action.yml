@@ -88,7 +88,7 @@ runs:
             currentRelease = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,            
-              releaseTag,
+              tag: releaseTag,
             }).data; 
           } else {
             console.log("Fetching release using 'release' event payload...");
