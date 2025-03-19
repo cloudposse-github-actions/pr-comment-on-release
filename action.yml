@@ -78,20 +78,21 @@ runs:
 
           releaseTag = TAG;
           releaseID = null;
+          currentRelease = null;
 
           if (releaseTag) {
-            currentReleaseResponse = await github.rest.repos.getReleaseByTag({
+            currentRelease = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,            
               releaseTag,
-            }); 
+            }).data; 
           } else {
             releaseID = context.payload.release.id;
-            currentReleaseResponse = await github.rest.repos.getRelease({
+            currentRelease = await github.rest.repos.getRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,            
               releaseID,
-            });
+            }).data;
           }
 
           currentRelease = currentReleaseResponse.data;
