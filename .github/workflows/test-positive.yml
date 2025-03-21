@@ -47,12 +47,23 @@ jobs:
           tag: ${{ needs.create-release.outputs.tag }}
           include_regex: 'v0\.0\.0-test\.include\..*' # Should find a comment
 
-      - name: Find Comment (should pass)
+      - name: Find Comment (should fail)
         uses: peter-evans/find-comment@v3
         id: fc
+        continue-on-error: true
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body-regex: "^These changes were released in .*${{ needs.create-release.outputs.name}}.*$"
+
+      - name: Succeed if comment was found
+        if: ${{ always() && steps.fc.outputs.comment-id }}
+        run: |
+          exit 0
+
+      - name: Fail if comment was not found
+        if: ${{ always() && !steps.fc.outputs.comment-id }}
+        run: |
+          exit 1
 
   teardown:
     runs-on: ubuntu-latest
@@ -63,16 +74,18 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Delete Test Release + Tag
+        if: needs.create-release.result == 'success'
         run: gh release delete ${{ needs.create-release.outputs.name }} --cleanup-tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: octokit/request-action@v2.x
         name: Delete Test Release Comment
+        if: ${{ always() && needs.assert.outputs.comment_id }}
         with:
           route: DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
           owner: ${{ github.event.pull_request.base.repo.name }}
           repo: ${{ github.event.pull_request.base.repo.name }}
           comment_id: ${{ needs.assert.outputs.comment_id }}
         env:
-          GITHUB_TOKEN: ${{ secrets.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
