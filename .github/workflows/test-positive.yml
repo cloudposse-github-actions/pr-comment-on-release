@@ -37,6 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [create-release]
     timeout-minutes: 5 # Timeout for test release workflow to run
+    outputs:
+      comment_id: ${{ steps.fc.outputs.comment-id }}
     steps:
       - uses: actions/checkout@v4
 
@@ -60,6 +62,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: gh release delete ${{ needs.create-release.outputs.name }} --cleanup-tag
+      - name: Delete Test Release + Tag
+        run: gh release delete ${{ needs.create-release.outputs.name }} --cleanup-tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: octokit/request-action@v2.x
+        name: Delete Test Release Comment
+        with:
+          route: DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
+          owner: ${{ github.event.repository.owner }}
+          repo: ${{ github.event.repository.name }}
+          comment_id: ${{ needs.assert.outputs.comment_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.token }}
