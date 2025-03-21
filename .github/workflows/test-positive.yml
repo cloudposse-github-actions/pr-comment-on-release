@@ -71,8 +71,8 @@ jobs:
         name: Delete Test Release Comment
         with:
           route: DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
-          owner: ${{ github.event.repository.owner }}
-          repo: ${{ github.event.repository.name }}
+          owner: ${{ github.event.pull_request.base.repo.name }}
+          repo: ${{ github.event.pull_request.base.repo.name }}
           comment_id: ${{ needs.assert.outputs.comment_id }}
         env:
           GITHUB_TOKEN: ${{ secrets.token }}
