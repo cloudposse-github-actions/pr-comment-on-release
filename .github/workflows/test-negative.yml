@@ -62,6 +62,6 @@ jobs:
     needs: [create-release, assert]
     if: ${{ always() }}
     steps:
-      - run: gh release delete ${{ needs.test.outputs.release }}
+      - run: gh release delete ${{ needs.create-release.outputs.release }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
