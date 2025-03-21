@@ -70,7 +70,7 @@ runs:
             const messageId = `<!-- release-pr-comment:${release.id} -->`;
             const message = `
             ${messageId}
-            These changes were released in [${release.name}](${release.html_url}).
+            These changes were released in [${release.tag_name}](${release.html_url}).
             `;
             
             // Сreate a new comment
@@ -185,7 +185,5 @@ runs:
           // Iterating through unique pull request numbers and creating or updating comments for them
           for (id of pull_requests.filter(onlyUnique)) {
             console.log(`Creating a comment on PR #${id} for ${currentRelease.tag_name}`);
-            # TODO: remove below debug log lines
-            console.log(`(debug): ${currentRelease.tag_name}, ${currentRelease.html_url}`);
             await createCommentForPR(id, currentRelease);
           }
