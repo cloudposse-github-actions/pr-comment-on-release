@@ -116,10 +116,8 @@ runs:
           currentReleaseFound = false;  
 
           // Filter releases
-          // TODO: remove log from filter function
           const pattern = new RegExp(INCLUDE_REGEX);
-          const releasesFiltered = releases.data.filter(release => console.log(`does ${release.tag_name} fall under ${pattern}?: ${release.tag_name.match(pattern)}`) || release.tag_name.match(pattern)); 
-          console.log(releasesFiltered); // TODO: remove debug log
+          const releasesFiltered = releases.data.filter(release => release.tag_name.match(pattern)); 
 
           // Iterating through releases to find the previous release relative to the current one
           for (release of releasesFiltered) {
