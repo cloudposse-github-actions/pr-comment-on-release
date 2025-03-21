@@ -43,7 +43,7 @@ jobs:
       - uses: ./
         with:
           tag: ${{ needs.create-release.outputs.tag }}
-          include_regex: '/v0\.0\.0-test\.include\..*/g' # Should NOT find a comment
+          include_regex: 'v0\.0\.0-test\.include\..*' # Should NOT find a comment
 
       - name: Find Comment (should fail)
         uses: peter-evans/find-comment@v3
