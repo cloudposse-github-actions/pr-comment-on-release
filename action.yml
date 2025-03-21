@@ -186,6 +186,6 @@ runs:
           for (id of pull_requests.filter(onlyUnique)) {
             console.log(`Creating a comment on PR #${id} for ${currentRelease.tag_name}`);
             # TODO: remove below debug log lines
-            console.log(currentRelease);
+            console.log(`(debug): ${currentRelease.tag_name}, ${currentRelease.html_url`);
             await createCommentForPR(id, currentRelease);
           }
