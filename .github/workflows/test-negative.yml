@@ -55,13 +55,14 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body-regex: "^These changes were released in .*${{ needs.create-release.outputs.name}}.*$"
 
+      # Empty strings evaluate to zero in GitHub Actions expressions.
       - name: Succeed if comment was not found
-        if: ${{ always() && !steps.fc.outputs.comment-id }}
+        if: ${{ always() && steps.fc.outputs.comment-id == 0}}
         run: |
           exit 0
 
       - name: Fail if comment was found
-        if: ${{ always() && steps.fc.outputs.comment-id }}
+        if: ${{ always() && steps.fc.outputs.comment-id != 0 }}
         run: |
           exit 1
 
@@ -81,7 +82,7 @@ jobs:
 
       - uses: octokit/request-action@v2.x
         name: Delete Test Release Comment
-        if: ${{ always() && needs.assert.outputs.comment_id }}
+        if: ${{ always() && needs.assert.outputs.comment_id != 0 }}
         with:
           route: DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
           owner: ${{ github.event.pull_request.base.repo.name }}
