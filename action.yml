@@ -29,6 +29,12 @@ runs:
       with:
         result-encoding: string
         retries: ${{ inputs.retries }}
+        # Note on quality:
+        # This composite workflow was repurposed from a reusable workflow and contains a lot of in-line JavaScript code
+        # that is probably better off being rewritten as a native TypeScript action.
+        # The in-line Javascript code is difficult to maintain due to inconsistent code highlighting and also being forced
+        # to keep everything in one index.js 'file', so to speak.
+        # Until an effort to refactor this workflow is made, it would be better to keep this as a 0.x.x release.
         script: |
           const { TAG, INCLUDE_REGEX } = process.env
 
@@ -121,7 +127,7 @@ runs:
           currentReleaseFound = false;
           console.log(`Looking for a release prior to ${currentTag}...`);
           for (release of releases.data) {
-            if (currentReleaseFound && (release.target_commitish != currentRelease.target_commitish || !previousRelease.target_commitish.match(/[0-9a-f]{40}/))) {
+            if (currentReleaseFound && (release.target_commitish != currentRelease.target_commitish || !release.target_commitish.match(/[0-9a-f]{40}/))) {
               // In test scenarios where a positive test scenario release and a negative test scenario are created at from the same target_commitish,
               // we want to avoid setting this release as the previous (base) release, as no commits will be found when comparing the two.
               // However, we obviously want to account for normal scenarios where the target_commitish of two releases is the same and is not a SHA,
