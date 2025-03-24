@@ -203,13 +203,12 @@ runs:
           let result = await Promise.all(
             pull_requests.filter(onlyUnique).map(async (id) => {
               console.log(`Creating a comment on PR #${id} for ${currentTag}`);
-              let commentID = await createCommentForPR(id, currentRelease);
+              let commentResponse = await createCommentForPR(id, currentRelease);
               return {
                 "pull_request": id,
-                "comment_id": commentID
+                "comment_id": commentResponse.data.id
               };
             })
           );
 
-          console.log(result); // TODO: remove
           return result;
