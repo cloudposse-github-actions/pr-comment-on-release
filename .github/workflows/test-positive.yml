@@ -53,13 +53,13 @@ jobs:
 
       - name: debug
         run: |
-          echo "${{ steps.action.outputs }}"
+          echo "${{ fromJSON(steps.action.outputs.result) }}"
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
         id: fc
         with:
-          issue-number: ${{ steps.action.outputs.comments[0].pull_request }}
+          issue-number: ${{ fromJSON(steps.action.outputs.result).comments[0].pull_request }}
           body-includes: ${{ needs.create-release.outputs.tag }}
 
       - name: Succeed if comment was found
