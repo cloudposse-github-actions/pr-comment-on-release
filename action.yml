@@ -120,7 +120,9 @@ runs:
           const pattern = new RegExp(INCLUDE_REGEX);
           if (!currentRelease.tag_name.match(pattern)) {
             core.warning(`The supplied include_regex does not match ${currentRelease.tag_name}. Doing nothing.`);
-            return
+            return {
+              "comments": []
+            };
           }
 
           // Find a previous release in order to find commits and later use them to find associated pull requests.
