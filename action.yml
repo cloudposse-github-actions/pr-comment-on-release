@@ -102,8 +102,8 @@ runs:
           currentRelease = currentReleaseResponse.data;
 
           const pattern = new RegExp(INCLUDE_REGEX);
-          if (!currentTag.match(pattern)) {
-            core.warning(`The supplied include_regex does not match ${currentTag}. Doing nothing.`);
+          if (!currentRelease.tag_name.match(pattern)) {
+            core.warning(`The supplied include_regex does not match ${currentRelease.tag_name}. Doing nothing.`);
             return
           }
 
