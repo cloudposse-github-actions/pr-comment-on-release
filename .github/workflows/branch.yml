@@ -23,5 +23,5 @@ permissions:
 
 jobs:
   github-action:
-    uses: cloudposse-github-actions/.github/.github/workflows/ci.yml@main
+    uses: cloudposse-github-actions/.github/.github/workflows/ci.yml@fix/ci-permissions #TODO: revert to main
     secrets: inherit
