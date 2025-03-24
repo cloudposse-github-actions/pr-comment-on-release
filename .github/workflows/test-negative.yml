@@ -40,9 +40,8 @@ jobs:
   assert:
     runs-on: ubuntu-latest
     needs: [create-release]
-    timeout-minutes: 5 # Timeout for test release workflow to run
     outputs:
-      comment_id: ${{ steps.fc.outputs.comment-id }}
+      comment_id: ${{ steps.comment-id.outputs.result }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,24 +50,34 @@ jobs:
           tag: ${{ needs.create-release.outputs.tag }}
           include_regex: 'v0\.0\.0-test\.include\..*' # Should NOT find a comment
 
-      - name: Find Comment (should fail)
-        uses: peter-evans/find-comment@v3
+      # Unfortunately, because the cloudposse/cloudposse-github-actions requires these tests to be in a workflow_dispatch,
+      # We cannot relay the PR# and have to get all issue comments (PRs are considered issues) and identify whether its
+      # body contains the tag name. This is not perfect, but it prevents major refactoring of the test-related reusable
+      # workflows which exist outside of this repository.
+      - name: Find Comment
+        uses: octokit/request-action@v2.x
         id: fc
         continue-on-error: true
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-includes: "${{ needs.create-release.outputs.name}}"
+          route: GET /repos/{owner}/{repo}/issues/comments
+          owner: ${{ github.event.pull_request.head.repo.owner.login }}
+          repo: ${{ github.event.pull_request.base.repo.name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Empty strings evaluate to zero in GitHub Actions expressions.
       - name: Succeed if comment was not found
-        if: ${{ always() && steps.fc.outputs.comment-id == 0}}
+        if: ${{ always() && !contains(fromJSON(steps.fc.outputs.data).*.body, needs.create-release.outputs.name) }}
         run: |
           exit 0
 
       - name: Fail if comment was found
-        if: ${{ always() && steps.fc.outputs.comment-id != 0 }}
+        if: ${{ always() && contains(fromJSON(steps.fc.outputs.data).*.body, needs.create-release.outputs.name) }}
         run: |
           exit 1
+
+      - id: comment-id
+        run: |
+          echo result=$(echo '${{ steps.fc.outputs.data }}' | jq -cr 'map(select(.body | contains("${{ needs.create-release.outputs.name }}")) | .id)[0]') >> $GITHUB_OUTPUT
 
   teardown:
     runs-on: ubuntu-latest
