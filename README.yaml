@@ -32,21 +32,13 @@ badges:
 related: []
 
 # Short description of this project
-description: Comments on a (merged) PR when it is included in a GitHub release.
+description: Comments on a PR when it is included in a GitHub release.
 
 introduction: |-
-  This composite action comments on a (merged) Pull Request when it is included in a GitHub release.
+  This action comments on a PR when it has commits associated with a release.
 
-references:
-  - name: "cloudposse-github-actions"
-    description: "Reusable workflows for different types of projects"
-    url: "https://github.com/cloudposse-github-actions"
-  - name: "pr-comment-on-release"
-    description: "Example application with complicated release workflow"
-    url: "https://github.com/cloudposse-github-actions/pr-comment-on-release"
+  This action should typically be called in a worklow with the `on.release` trigger:
 
-# How to use this project
-usage: |-
   ```yaml
     name: PR Comment on Release
     
@@ -68,10 +60,30 @@ usage: |-
             uses: cloudposse-github-actions/pr-comment-on-release
             id: pr-comment-on-release
             with:
-              retries: 5 # Override number of retries
+              # Optional: only comment on PRs when the release matches a certain regex (default: ".*")
+              include_regex: "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
   ```
 
-include:
+  This action returns a JSON-encoded string, which contains information on the comments it created (if any):
+
+  ```jsonc
+  {
+    "comments": [
+      "pull_request": 1, // the PR #
+      "comment_id": 12345 // the comment ID
+    ]
+  }
+  ```
+
+references:
+  - name: "cloudposse-github-actions"
+    description: "Reusable workflows for different types of projects"
+    url: "https://github.com/cloudposse-github-actions"
+  - name: "pr-comment-on-release"
+    description: "Example application with complicated release workflow"
+    url: "https://github.com/cloudposse-github-actions/pr-comment-on-release"
+
+includes:
   - "docs/github-action.md"
 
 # Contributors to this project
