@@ -19,9 +19,7 @@ on:
 permissions:
   contents: write
   actions: write
-  # Allow test PR comments to be deleted
-  issues: write
-  pull-requests: write
+  pull-requests: write # allow test release comments to be deleted.
 
 jobs:
   github-action:
