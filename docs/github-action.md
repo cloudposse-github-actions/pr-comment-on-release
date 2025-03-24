@@ -13,5 +13,5 @@
 
 | Name | Description |
 |------|-------------|
-| result | A JSON-encoded string, which contains information on the comments it created (if any). |
+| result | A JSON-encoded string which contains information on the comments it created (if any). |
 <!-- markdownlint-restore -->

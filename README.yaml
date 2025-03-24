@@ -79,9 +79,6 @@ references:
   - name: "cloudposse-github-actions"
     description: "Reusable workflows for different types of projects"
     url: "https://github.com/cloudposse-github-actions"
-  - name: "pr-comment-on-release"
-    description: "Example application with complicated release workflow"
-    url: "https://github.com/cloudposse-github-actions/pr-comment-on-release"
 
 includes:
   - "docs/github-action.md"

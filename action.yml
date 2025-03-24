@@ -18,7 +18,7 @@ inputs:
     description: "The git tag used to determine the release. If omitted, the release will be determined from `github.event.release.id`."
 outputs:
   result:
-    description: "A JSON-encoded string, which contains information on the comments it created (if any)."
+    description: "A JSON-encoded string which contains information on the comments it created (if any)."
     value: ${{ steps.pr-comment-on-release.outputs.result }}
 runs:
   using: "composite"
