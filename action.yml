@@ -124,7 +124,7 @@ runs:
           currentReleaseFound = false;  
           for (release of releasesFiltered) {
             previousRelease = release;
-            console.log(Comparing "${currentRelease.tag_name}" to "${previousRelease.tag_name}"...);
+            console.log(`Comparing "${currentRelease.tag_name}" to "${previousRelease.tag_name}"...`);
             if (release.tag_name == currentTag) {
               currentReleaseFound = true;
               break;
