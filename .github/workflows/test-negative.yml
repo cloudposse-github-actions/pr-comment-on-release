@@ -88,8 +88,8 @@ jobs:
         name: Delete Test Release Comment
         if: ${{ always() && needs.assert.outputs.comment_id != 0 }}
         with:
-          route: DELETE /repos/{owner}/{repo}/pulls/comments/{comment_id}
-          owner: cloudposse-github-actions # TODO: figure out valid template for repo owner in this event context
+          route: DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
+          owner: ${{ github.event.pull_request.head.repo.owner.login }}
           repo: ${{ github.event.pull_request.base.repo.name }}
           comment_id: ${{ needs.assert.outputs.comment_id }}
         env:
