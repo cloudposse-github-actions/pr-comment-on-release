@@ -7,6 +7,6 @@ repository:
   has_projects: false
   # Either `true` to enable the wiki for this repository, `false` to disable it.
   has_wiki: false
-  name: composite-template
-  description: 'Template repository for composite GitHub Action'
-  topics: ""
+  name: pr-comment-on-release
+  description: "An action that comments on PRs when their changes have been released."
+  topics: "github-actions,pull-requests,releases"
