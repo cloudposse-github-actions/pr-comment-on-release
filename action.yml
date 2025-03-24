@@ -111,10 +111,6 @@ runs:
             repo: context.repo.repo,            
           });
 
-          // Initializing variables for storing information about the previous release
-          previousRelease = null;
-          currentReleaseFound = false;  
-
           // Filter releases
           console.log(`Filtering releases using supplied include_regex: ${INCLUDE_REGEX}`);
           const pattern = new RegExp(INCLUDE_REGEX);
@@ -124,12 +120,14 @@ runs:
           }
 
           // Iterating through releases to find the previous release relative to the current one
+          previousRelease = null;
+          currentReleaseFound = false;  
           for (release of releasesFiltered) {
             previousRelease = release;
-            if (currentReleaseFound) {
-              break;
-            } else if (release.tag_name == currentTag) {
+            console.log(Comparing "${currentRelease.tag_name}" to "${previousRelease.tag_name}"...);
+            if (release.tag_name == currentTag) {
               currentReleaseFound = true;
+              break;
             }
           }
 
