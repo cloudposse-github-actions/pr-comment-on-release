@@ -102,7 +102,6 @@ Check out these related projects.
 For additional context, refer to some of these links.
 
 - [cloudposse-github-actions](https://github.com/cloudposse-github-actions) - Reusable workflows for different types of projects
-- [pr-comment-on-release](https://github.com/cloudposse-github-actions/pr-comment-on-release) - Example application with complicated release workflow
 
 
 ## ✨ Contributing
