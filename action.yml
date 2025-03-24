@@ -1,5 +1,8 @@
 name: "PR Comment on Release"
-description: "Comments on a (merged) PR when it is included in a GitHub release."
+description: |
+  Comments on a PR when it is included in a GitHub release.
+
+  This action should typically be called in a worklow with the `on.release` trigger.
 author: hello@cloudposse.com
 branding:
   icon: "file"
@@ -27,7 +30,7 @@ runs:
         TAG: ${{ inputs.tag }}
         INCLUDE_REGEX: ${{ inputs.include_regex }}
       with:
-        result-encoding: string
+        result-encoding: json
         retries: ${{ inputs.retries }}
         # Note on quality:
         # This composite workflow was repurposed from a reusable workflow and contains a lot of in-line JavaScript code
@@ -193,7 +196,7 @@ runs:
 
           if (pull_requests.length === 0) {
             core.warning(`No Pull Requests associated with ${currentTag} were found.`);
-            return;
+            return [];
           }
 
           // Iterate through unique pull request numbers and create or update comments for them
