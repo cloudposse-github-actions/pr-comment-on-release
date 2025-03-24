@@ -80,7 +80,7 @@ runs:
             `;
             
             // Сreate a new comment
-            await github.rest.issues.createComment({
+            return await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: pr_id,
@@ -193,11 +193,19 @@ runs:
 
           if (pull_requests.length === 0) {
             core.warning(`No Pull Requests associated with ${currentTag} were found.`);
-            return
+            return;
           }
 
-          // Iterating through unique pull request numbers and creating or updating comments for them
-          for (id of pull_requests.filter(onlyUnique)) {
-            console.log(`Creating a comment on PR #${id} for ${currentTag}`);
-            await createCommentForPR(id, currentRelease);
-          }
+          // Iterate through unique pull request numbers and create or update comments for them
+          let result = await Promise.all(
+            pull_requests.filter(onlyUnique).map(async (id) => {
+              console.log(`Creating a comment on PR #${id} for ${currentTag}`);
+              let commentID = await createCommentForPR(id, currentRelease);
+              return {
+                "pull_request": id,
+                "comment_id": commentID
+              };
+            })
+          );
+
+          return result;
