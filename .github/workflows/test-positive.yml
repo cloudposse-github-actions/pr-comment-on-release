@@ -53,7 +53,7 @@ jobs:
 
       - name: debug
         run: |
-          echo "${{ steps.action.outputs.comments }}"
+          echo "${{ steps.action.outputs }}"
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
