@@ -100,8 +100,8 @@ runs:
             });
           }
           console.log("Got release"); // TODO: remove debug log
-          console.log(pattern); // TODO: remove debug log
           currentRelease = currentReleaseResponse.data;
+          console.log(currentRelease); // TODO: remove debug log
 
           // Extracting tag name and target branch from the current release
           currentTag = currentRelease.tag_name;
