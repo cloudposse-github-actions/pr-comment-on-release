@@ -101,6 +101,12 @@ runs:
           }
           currentRelease = currentReleaseResponse.data;
 
+          const pattern = new RegExp(INCLUDE_REGEX);
+          if (!currentTag.match(pattern)) {
+            core.warning(`The supplied include_regex does not match ${currentTag}. Doing nothing.`);
+            return
+          }
+
           // Extracting tag name and target branch from the current release
           currentTag = currentRelease.tag_name;
           currentBranch = currentRelease.target_commitish;
@@ -111,28 +117,20 @@ runs:
             repo: context.repo.repo,            
           });
 
-          // Filter releases
-          console.log(`Filtering releases using supplied include_regex: ${INCLUDE_REGEX}`);
-          const pattern = new RegExp(INCLUDE_REGEX);
-          const releasesFiltered = releases.data.filter(release => release.tag_name.match(pattern)); 
-          if (releasesFiltered.length == 0) {
-            core.warning(`The supplied include_regex ${INCLUDE_REGEX} resulted in 0 matching releases.`);
-          }
-
-          // Iterating through releases to find the previous release relative to the current one
-          previousRelease = null;
-          currentReleaseFound = false;  
-          for (release of releasesFiltered) {
-            previousRelease = release;
-            console.log(`Comparing "${currentRelease.tag_name}" to "${previousRelease.tag_name}"...`);
-            if (release.tag_name == currentTag) {
-              currentReleaseFound = true;
+          console.log(`Looking for a release prior to ${currentTag}...`);
+          for (release of releases.data) {
+            if (currentReleaseFound) {
+              previousRelease = release;
               break;
+            } else if (release.tag_name == currentTag) {
+              currentReleaseFound = true;
             }
           }
 
-          if (!currentReleaseFound) {
-            core.setFailed(`Could not find a release with tag name: "${TAG}".`);
+          if (previousRelease == null) {
+            core.setFailed(`This action requires that at least one release prior to ${currentTag} exists, regardless of "include_regex".`);
+          } else {
+            console.log(`Found a prior release to "${currentTag}": "${previousRelease.tag_name}"`);
           }
 
           // Comparing commits between the current and previous releases
@@ -181,12 +179,12 @@ runs:
           }            
 
           if (pull_requests.length === 0) {
-            core.warning(`No Pull Requests associated with ${currentRelease} were found.`);
+            core.warning(`No Pull Requests associated with ${currentTag} were found.`);
             return
           }
 
           // Iterating through unique pull request numbers and creating or updating comments for them
           for (id of pull_requests.filter(onlyUnique)) {
-            console.log(`Creating a comment on PR #${id} for ${currentRelease.tag_name}`);
+            console.log(`Creating a comment on PR #${id} for ${currentTag}`);
             await createCommentForPR(id, currentRelease);
           }
