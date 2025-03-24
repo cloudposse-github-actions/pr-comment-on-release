@@ -1,0 +1,92 @@
+---
+#
+# This is the canonical configuration for the `README.md`
+# Run `make readme` to rebuild the `README.md`
+#
+
+# Name of this project
+name: pr-comment-on-release
+
+# Tags of this project
+tags:
+  - github-action
+
+# Logo for this project
+#logo: docs/logo.png
+
+# License of this project
+license: "APACHE2"
+
+# Canonical GitHub repo
+github_repo: cloudposse-github-actions/pr-comment-on-release
+
+# Badges to display
+badges:
+  - name: "Latest Release"
+    image: "https://img.shields.io/github/release/cloudposse/example-github-action-composite.svg"
+    url: "https://github.com/cloudposse/example-github-action-composite/releases/latest"
+  - name: "Slack Community"
+    image: "https://slack.cloudposse.com/badge.svg"
+    url: "https://slack.cloudposse.com"
+
+related: []
+
+# Short description of this project
+description: Comments on a PR when it is included in a GitHub release.
+
+introduction: |-
+  This action comments on a PR when it has commits associated with a release.
+
+  This action should typically be called in a worklow with the `on.release` trigger:
+
+  ```yaml
+    name: PR Comment on Release
+    
+    on:
+      release:
+        types: [published]
+    
+    permissions:
+      deployments: write
+      id-token: write
+      contents: write
+      pull-requests: write
+
+    jobs:
+      context:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Comment on Release
+            uses: cloudposse-github-actions/pr-comment-on-release
+            id: pr-comment-on-release
+            with:
+              # Optional: only comment on PRs when the release matches a certain regex (default: ".*")
+              include_regex: "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
+  ```
+
+  This action returns a JSON-encoded string, which contains information on the comments it created (if any):
+
+  ```jsonc
+  {
+    "comments": [
+      "pull_request": 1, // the PR #
+      "comment_id": 12345 // the comment ID
+    ]
+  }
+  ```
+
+references:
+  - name: "cloudposse-github-actions"
+    description: "Reusable workflows for different types of projects"
+    url: "https://github.com/cloudposse-github-actions"
+  - name: "pr-comment-on-release"
+    description: "Example application with complicated release workflow"
+    url: "https://github.com/cloudposse-github-actions/pr-comment-on-release"
+
+includes:
+  - "docs/github-action.md"
+
+# Contributors to this project
+contributors:
+  - name: "Yoni Koren"
+    github: "korenyoni"

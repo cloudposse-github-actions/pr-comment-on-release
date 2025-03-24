@@ -1,0 +1,213 @@
+name: "PR Comment on Release"
+description: "Comments on a PR when it is included in a GitHub release."
+author: hello@cloudposse.com
+branding:
+  icon: "git-pull-request"
+  color: "white"
+inputs:
+  retries:
+    required: false
+    description: "Number of retries."
+    default: "0"
+  include_regex:
+    required: false
+    description: "Only include releases whose tag name matches this regular expression. This regular expression should not include delimeters. i.e. instead of `/.*/g`, supply only `.*`."
+    default: ".*"
+  tag:
+    required: false
+    description: "The git tag used to determine the release. If omitted, the release will be determined from `github.event.release.id`."
+outputs:
+  result:
+    description: "A JSON-encoded string, which contains information on the comments it created (if any)."
+    value: ${{ steps.pr-comment-on-release.outputs.result }}
+runs:
+  using: "composite"
+  steps:
+    - id: pr-comment-on-release
+      uses: actions/github-script@v7
+      env:
+        TAG: ${{ inputs.tag }}
+        INCLUDE_REGEX: ${{ inputs.include_regex }}
+      with:
+        result-encoding: json
+        retries: ${{ inputs.retries }}
+        # Note on quality:
+        # This composite workflow was repurposed from a reusable workflow and contains a lot of in-line JavaScript code
+        # that is probably better off being rewritten as a native TypeScript action.
+        # The in-line Javascript code is difficult to maintain due to inconsistent code highlighting and also being forced
+        # to keep everything in one index.js 'file', so to speak.
+        # Until an effort to refactor this workflow is made, it would be better to keep this as a 0.x.x release.
+        script: |
+          const { TAG, INCLUDE_REGEX } = process.env
+
+          switch(context.eventName) {
+            case ('release'):
+              if (TAG != "") {
+                core.warning(`'tag' is reserved for testing and is not needed when running on 'release'. The release will be determined using the supplied 'tag' (${TAG}).`);
+              }
+              break;
+            case ('workflow_run'):
+              core.warning(`This action is designed to run on 'release', not 'workflow_run'. Even when corresponding to a workflow triggered by 'release', 'workflow_run' may not work due to its event context schema.`);
+              break;
+            case ('workflow_dispatch'):
+              if (TAG === "") {
+                core.setFailed(`This action is meant to only run on 'release'. 'workflow_dispatch' is reserved for testing, and 'tag' was not supplied.`);
+              }
+              core.warning(`This action is meant to only run on 'release'. 'workflow_dispatch' is reserved for testing. Release will be fetched using ${TAG}.`);
+              break;
+            default:
+              core.setFailed(`The ${context.eventName} event is not supported by this action.`);
+          }
+
+          // Function to check if a value is unique in an array
+          function onlyUnique(value, index, array) {
+            return array.indexOf(value) === index;
+          }
+
+          // Function to create or update a comment for a pull request (PR) associated with a release
+          async function createCommentForPR(pr_id, release) {
+            // Parameters for fetching comments related to the PR
+            const parameters = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr_id,
+              per_page: 100,
+            }
+            
+            // Constructing the message to be posted or updated as a comment
+            const messageId = `<!-- release-pr-comment:${release.id} -->`;
+            const message = `
+            ${messageId}
+            These changes were released in [${release.tag_name}](${release.html_url}).
+            `;
+            
+            // Сreate a new comment
+            return await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr_id,
+              body: message
+            });
+          }
+
+          currentReleaseResponse = null;
+
+          if (TAG != "") {
+            console.log(`Fetching release using supplied 'tag' input (${TAG})...`);
+            currentReleaseResponse = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,            
+              tag: TAG,
+            }); 
+          } else {
+            console.log("Fetching release using 'release' event payload...");
+            currentReleaseResponse = await github.rest.repos.getRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,            
+              release_id: context.payload.release.id,
+            });
+          }
+          currentRelease = currentReleaseResponse.data;
+          currentTag = currentRelease.tag_name;
+          currentBranch = currentRelease.target_commitish;
+
+          const pattern = new RegExp(INCLUDE_REGEX);
+          if (!currentRelease.tag_name.match(pattern)) {
+            core.warning(`The supplied include_regex does not match ${currentRelease.tag_name}. Doing nothing.`);
+            return {
+              "comments": []
+            };
+          }
+
+          // Find a previous release in order to find commits and later use them to find associated pull requests.
+          releases = await github.rest.repos.listReleases({
+            owner: context.repo.owner,
+            repo: context.repo.repo,            
+          });
+
+          previousRelease = null;
+          currentReleaseFound = false;
+          console.log(`Looking for a release prior to ${currentTag}...`);
+          for (release of releases.data) {
+            if (currentReleaseFound && (release.target_commitish != currentRelease.target_commitish || !release.target_commitish.match(/[0-9a-f]{40}/))) {
+              // In test scenarios where a positive test scenario release and a negative test scenario are created at from the same target_commitish,
+              // we want to avoid setting this release as the previous (base) release, as no commits will be found when comparing the two.
+              // However, we obviously want to account for normal scenarios where the target_commitish of two releases is the same and is not a SHA,
+              // for example two releases with target_commmitish as 'main'. This is seemingly the best way to infer this given the limited information
+              // returned by the listReleases endpoint.
+              previousRelease = release;
+              break;
+            } else if (release.tag_name == currentTag) {
+              currentReleaseFound = true;
+            }
+          }
+
+          if (previousRelease == null) {
+            core.setFailed(`This action requires that at least one release prior to ${currentTag} exists, regardless of "include_regex".`);
+          } else {
+            console.log(`Found a prior release to "${currentTag}": "${previousRelease.tag_name}"`);
+          }
+
+          // Compare commits, as a pre-requisuite for finding associated pull requests.
+          commitsResponse = await github.rest.repos.compareCommits({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            base: previousRelease.tag_name,
+            head: currentRelease.tag_name,
+          });
+          commits = commitsResponse.data;
+
+          // Find associated pull requests
+          pull_requests = [];
+          for (commit of commits.commits) {
+            responseCommit = await github.rest.git.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,            
+              commit_sha: commit.sha,
+            });
+
+            // GraphQL query to fetch details about the commit, including associated pull requests
+            const query = `
+              {
+                resource(url: "${context.payload.repository.html_url}/commit/${commit.sha}") {
+                  ... on Commit {
+                    messageHeadlineHTML
+                    messageBodyHTML
+                    associatedPullRequests(first: 10) {
+                      pageInfo { hasNextPage }
+                      edges { node { number } }
+                    }
+                  }
+                }
+              }
+            `;
+
+            response = await github.graphql(query);
+
+            for (edge of response.resource.associatedPullRequests.edges) {
+              pull_requests.push(edge.node.number);
+            }
+          }
+
+          if (pull_requests.length === 0) {
+            core.warning(`No Pull Requests associated with ${currentTag} were found.`);
+            return {
+              "comments": []
+            };
+          }
+
+          // Iterate through unique pull request numbers and create or update comments for them
+          let result = await Promise.all(
+            pull_requests.filter(onlyUnique).map(async (id) => {
+              console.log(`Creating a comment on PR #${id} for ${currentTag}`);
+              let commentResponse = await createCommentForPR(id, currentRelease);
+              return {
+                "pull_request": id,
+                "comment_id": commentResponse.data.id
+              };
+            })
+          );
+
+          return {
+            "comments": result
+          };
