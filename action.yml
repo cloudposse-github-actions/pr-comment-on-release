@@ -119,6 +119,8 @@ runs:
           const pattern = new RegExp(INCLUDE_REGEX);
           const releasesFiltered = releases.data.filter(release => release.tag_name.match(pattern)); 
 
+          console.log(pattern); // TODO: remove debug log
+          console.log(releasesFiltered); // TODO: remove debug log
           // Iterating through releases to find the previous release relative to the current one
           for (release of releasesFiltered) {
             console.log(release); // TODO: remove debug log
