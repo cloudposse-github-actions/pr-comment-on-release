@@ -63,15 +63,15 @@ jobs:
           issue-number: ${{ fromJSON(steps.action.outputs.result).comments[0].pull_request }}
           body-includes: ${{ needs.create-release.outputs.tag }}
 
-      - name: Succeed if comment was not found
-        if: ${{ always() && steps.fc.outputs.comment-id == 0 }}
-        run: |
-          exit 0
-
       - name: Fail if comment was found
         if: ${{ always() && steps.fc.outputs.comment-id != 0 }}
         run: |
           exit 1
+
+      - name: Succeed if comment was not found
+        if: ${{ always() && steps.fc.outputs.comment-id == 0 }}
+        run: |
+          exit 0
 
   teardown:
     runs-on: ubuntu-latest
