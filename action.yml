@@ -22,10 +22,15 @@ inputs:
     required: false
     description: "The git tag used to determine the release. If omitted, the release will be determined from `github.event.release.id`."
     default: ""
+outputs:
+  comments:
+    description: "A JSON-encoded list of objects detailing the ID of each PR and the comment created by this action."
+    value: ${{ steps.pr-comment-on-release.outputs.comments }}
 runs:
   using: "composite"
   steps:
-    - uses: actions/github-script@v7
+    - id: pr-comment-on-release
+      uses: actions/github-script@v7
       env:
         TAG: ${{ inputs.tag }}
         INCLUDE_REGEX: ${{ inputs.include_regex }}
