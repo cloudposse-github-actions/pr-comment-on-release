@@ -196,7 +196,7 @@ runs:
           if (pull_requests.length === 0) {
             core.warning(`No Pull Requests associated with ${currentTag} were found.`);
             return {
-              []
+              "comments": []
             };
           }
 
@@ -213,5 +213,5 @@ runs:
           );
 
           return {
-            result
+            "comments": result
           };
