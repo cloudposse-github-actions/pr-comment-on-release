@@ -190,7 +190,9 @@ runs:
 
           if (pull_requests.length === 0) {
             core.warning(`No Pull Requests associated with ${currentTag} were found.`);
-            return [];
+            return {
+              "comments": []
+            };
           }
 
           // Iterate through unique pull request numbers and create or update comments for them
@@ -205,4 +207,6 @@ runs:
             })
           );
 
-          return result;
+          return {
+            "comments": result
+          };
