@@ -23,9 +23,9 @@ inputs:
     description: "The git tag used to determine the release. If omitted, the release will be determined from `github.event.release.id`."
     default: ""
 outputs:
-  result:
+  comments:
     description: "A JSON-encoded list of objects detailing the ID of each PR and the comment created by this action."
-    value: ${{ steps.pr-comment-on-release.outputs.result }}
+    value: ${{ fromJSON(steps.pr-comment-on-release.outputs.result).comments }}
 runs:
   using: "composite"
   steps:
