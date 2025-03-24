@@ -109,6 +109,8 @@ runs:
             });
           }
           currentRelease = currentReleaseResponse.data;
+          currentTag = currentRelease.tag_name;
+          currentBranch = currentRelease.target_commitish;
 
           const pattern = new RegExp(INCLUDE_REGEX);
           if (!currentRelease.tag_name.match(pattern)) {
@@ -116,11 +118,7 @@ runs:
             return
           }
 
-          // Extracting tag name and target branch from the current release
-          currentTag = currentRelease.tag_name;
-          currentBranch = currentRelease.target_commitish;
-
-          // Listing all releases of the repository
+          // Find a previous release in order to find commits and later use them to find associated pull requests.
           releases = await github.rest.repos.listReleases({
             owner: context.repo.owner,
             repo: context.repo.repo,            
@@ -149,20 +147,17 @@ runs:
             console.log(`Found a prior release to "${currentTag}": "${previousRelease.tag_name}"`);
           }
 
-          // Comparing commits between the current and previous releases
+          // Compare commits, as a pre-requisuite for finding associated pull requests.
           commitsResponse = await github.rest.repos.compareCommits({
             owner: context.repo.owner,
-            repo: context.repo.repo,            
+            repo: context.repo.repo,
             base: previousRelease.tag_name,
             head: currentRelease.tag_name,
           });
-
           commits = commitsResponse.data;
 
-          // Initializing an array to store pull request numbers associated with the commits
+          // Find associated pull requests
           pull_requests = [];
-
-          // Iterating through commits to find associated pull requests and extracting their numbers
           for (commit of commits.commits) {
             responseCommit = await github.rest.git.getCommit({
               owner: context.repo.owner,
@@ -188,11 +183,10 @@ runs:
 
             response = await github.graphql(query);
 
-            // Extracting pull request numbers from the GraphQL response
             for (edge of response.resource.associatedPullRequests.edges) {
               pull_requests.push(edge.node.number);
             }
-          }            
+          }
 
           if (pull_requests.length === 0) {
             core.warning(`No Pull Requests associated with ${currentTag} were found.`);

@@ -41,43 +41,32 @@ jobs:
     runs-on: ubuntu-latest
     needs: [create-release]
     outputs:
-      comment_id: ${{ steps.comment-id.outputs.result }}
+      comment-id: ${{ steps.fc.outputs.comment-id }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./
+        id: action
         with:
           tag: ${{ needs.create-release.outputs.tag }}
           include_regex: 'v0\.0\.0-test\.include\..*' # Should find a comment
 
-      # Unfortunately, because the cloudposse/cloudposse-github-actions requires these tests to be in a workflow_dispatch,
-      # We cannot relay the PR# and have to get all issue comments (PRs are considered issues) and identify whether its
-      # body contains the tag name. This is not perfect, but it prevents major refactoring of the test-related reusable
-      # workflows which exist outside of this repository.
       - name: Find Comment
-        uses: octokit/request-action@v2.x
+        uses: peter-evans/find-comment@v3
         id: fc
-        continue-on-error: true
         with:
-          route: GET /repos/{owner}/{repo}/issues/comments
-          owner: "${{ github.event.repository.owner.login }}"
-          repo: "${{ github.event.repository.name }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ fromJSON(steps.action.outputs.result)[0].pull_request }}
+          body-includes: ${{ needs.create-release.outputs.tag }}
 
       - name: Succeed if comment was found
-        if: ${{ always() && contains(fromJSON(steps.fc.outputs.data).*.body, needs.create-release.outputs.name) }}
+        if: ${{ always() && steps.fc.outputs.comment-id != 0 }}
         run: |
           exit 0
 
       - name: Fail if comment was not found
-        if: ${{ always() && !contains(fromJSON(steps.fc.outputs.data).*.body, needs.create-release.outputs.name) }}
+        if: ${{ always() && steps.fc.outputs.comment-id == 0 }}
         run: |
           exit 1
-
-      - id: comment-id
-        run: |
-          echo result=$(echo '${{ steps.fc.outputs.data }}' | jq -cr 'map(select(.body | contains("${{ needs.create-release.outputs.name }}")) | .id)[0]') >> $GITHUB_OUTPUT
 
   teardown:
     runs-on: ubuntu-latest
@@ -95,11 +84,11 @@ jobs:
 
       - uses: octokit/request-action@v2.x
         name: Delete Test Release Comment
-        if: ${{ always() && needs.assert.outputs.comment_id != 0 }}
+        if: ${{ always() && needs.assert.outputs.comment-id != 0 }}
         with:
           route: DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
           owner: "${{ github.event.repository.owner.login }}"
           repo: "${{ github.event.repository.name }}"
-          comment_id: ${{ needs.assert.outputs.comment_id }}
+          comment_id: ${{ needs.assert.outputs.comment-id }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
