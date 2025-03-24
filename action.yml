@@ -99,9 +99,7 @@ runs:
               release_id: context.payload.release.id,
             });
           }
-          console.log("Got release"); // TODO: remove debug log
           currentRelease = currentReleaseResponse.data;
-          console.log(currentRelease); // TODO: remove debug log
 
           // Extracting tag name and target branch from the current release
           currentTag = currentRelease.tag_name;
@@ -118,29 +116,25 @@ runs:
           currentReleaseFound = false;  
 
           // Filter releases
-          console.log("Filtering releases"); // TODO: remove debug log
+          console.log(`Filtering releases using supplied include_regex: ${INCLUDE_REGEX}`);
           const pattern = new RegExp(INCLUDE_REGEX);
           const releasesFiltered = releases.data.filter(release => release.tag_name.match(pattern)); 
+          if (releasesFiltered.length == 0) {
+            core.warning(`The supplied include_regex ${INCLUDE_REGEX} resulted in 0 matching releases.`);
+          }
 
-          console.log(pattern); // TODO: remove debug log
-          console.log(releasesFiltered); // TODO: remove debug log
           // Iterating through releases to find the previous release relative to the current one
           for (release of releasesFiltered) {
-            console.log("Comparing release to previousRelease"); // TODO: remove debug log
-            console.log(release); // TODO: remove debug log
-            console.log(previousRelease); // TODO: remove debug log
+            previousRelease = release;
             if (currentReleaseFound) {
-              previousRelease = release;
               break;
             } else if (release.tag_name == currentTag) {
               currentReleaseFound = true;
             }
           }
 
-          // If no previous release is found, log a message and return
-          if (previousRelease == null) {
-            console.log(`No previous release found for ${currentTag}`);
-            return;
+          if (!currentReleaseFound) {
+            core.setFailed(`Could not find a release with tag name: "${TAG}".`);
           }
 
           // Comparing commits between the current and previous releases
@@ -187,6 +181,11 @@ runs:
               pull_requests.push(edge.node.number);
             }
           }            
+
+          if (pull_requests.length === 0) {
+            core.warning(`No Pull Requests associated with ${currentRelease} were found.`);
+            return
+          }
 
           // Iterating through unique pull request numbers and creating or updating comments for them
           for (id of pull_requests.filter(onlyUnique)) {
