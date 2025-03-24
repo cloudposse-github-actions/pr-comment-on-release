@@ -51,6 +51,10 @@ jobs:
           tag: ${{ needs.create-release.outputs.tag }}
           include_regex: 'v0\.0\.0-test\.include\..*' # Should NOT find a comment
 
+      - name: debug
+        run: |
+          echo "${{ fromJSON(steps.action.outputs) }}"
+
       - name: Find Comment
         uses: peter-evans/find-comment@v3
         id: fc
