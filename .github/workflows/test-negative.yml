@@ -58,8 +58,8 @@ jobs:
       - name: Find Comment
         uses: peter-evans/find-comment@v3
         id: fc
+        continue-on-error: true
         with:
-          continue-on-error: true
           issue-number: ${{ fromJSON(steps.action.outputs.result).comments[0].pull_request }}
           body-includes: ${{ needs.create-release.outputs.tag }}
 
