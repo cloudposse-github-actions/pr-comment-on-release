@@ -121,7 +121,12 @@ runs:
           currentReleaseFound = false;
           console.log(`Looking for a release prior to ${currentTag}...`);
           for (release of releases.data) {
-            if (currentReleaseFound) {
+            if (currentReleaseFound && (release.target_commitish != currentRelease.target_commitish || !previousRelease.target_commitish.match(/[0-9a-f]{40}/))) {
+              // In test scenarios where a positive test scenario release and a negative test scenario are created at from the same target_commitish,
+              // we want to avoid setting this release as the previous (base) release, as no commits will be found when comparing the two.
+              // However, we obviously want to account for normal scenarios where the target_commitish of two releases is the same and is not a SHA,
+              // for example two releases with target_commmitish as 'main'. This is seemingly the best way to infer this given the limited information
+              // returned by the listReleases endpoint.
               previousRelease = release;
               break;
             } else if (release.tag_name == currentTag) {
