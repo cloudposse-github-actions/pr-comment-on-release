@@ -99,6 +99,8 @@ runs:
               release_id: context.payload.release.id,
             });
           }
+          console.log("Got release"); // TODO: remove debug log
+          console.log(pattern); // TODO: remove debug log
           currentRelease = currentReleaseResponse.data;
 
           // Extracting tag name and target branch from the current release
@@ -116,6 +118,7 @@ runs:
           currentReleaseFound = false;  
 
           // Filter releases
+          console.log("Filtering releases"); // TODO: remove debug log
           const pattern = new RegExp(INCLUDE_REGEX);
           const releasesFiltered = releases.data.filter(release => release.tag_name.match(pattern)); 
 
@@ -123,6 +126,7 @@ runs:
           console.log(releasesFiltered); // TODO: remove debug log
           // Iterating through releases to find the previous release relative to the current one
           for (release of releasesFiltered) {
+            console.log("Comparing release to previousRelease"); // TODO: remove debug log
             console.log(release); // TODO: remove debug log
             console.log(previousRelease); // TODO: remove debug log
             if (currentReleaseFound) {
