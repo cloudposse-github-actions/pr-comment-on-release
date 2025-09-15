@@ -10,11 +10,11 @@ on:
       - main
       - release/v*
     paths-ignore:
-      - ".github/**"
-      - "docs/**"
-      - "examples/**"
-      - "test/**"
-      - "README.md"
+      - '.github/**'
+      - 'docs/**'
+      - 'examples/**'
+      - 'test/**'
+      - 'README.md'
 
 permissions:
   contents: write
@@ -22,5 +22,5 @@ permissions:
 
 jobs:
   github-action:
-    uses: cloudposse-github-actions/.github/.github/workflows/ci.yml@main
+    uses: cloudposse-github-actions/.github/.github/workflows/shared-github-action.yml@main
     secrets: inherit
