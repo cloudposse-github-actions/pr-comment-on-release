@@ -1,18 +1,24 @@
 name: Test Positive
 on:
-  workflow_dispatch: {}
-
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: The fully-formed ref of the branch or tag that triggered the workflow run
+        required: false
+        type: string
+      sha:
+        description: The sha of the commit that triggered the workflow run
+        required: false
+        type: string
 permissions:
   contents: write
   pull-requests: write
-
 jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
       - name: Setup
         run: echo "Do setup"
-
   create-release:
     runs-on: ubuntu-latest
     continue-on-error: true
@@ -20,7 +26,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - id: create-release
         run: |
           release_name="${PREFIX}$(git rev-parse --short HEAD)"
@@ -32,11 +37,9 @@ jobs:
           # The action _will_ pick up a comment because the provided 'include_regex' will be able to match it.
           PREFIX: "v0.0.0-test.include."
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     outputs:
       name: ${{ steps.create-release.outputs.name }}
       tag: ${{ steps.create-release.outputs.tag }}
-
   assert:
     runs-on: ubuntu-latest
     needs: [create-release]
@@ -44,24 +47,20 @@ jobs:
       comment-id: ${{ steps.fc.outputs.comment-id }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./
         id: action
         with:
           tag: ${{ needs.create-release.outputs.tag }}
           include_regex: 'v0\.0\.0-test\.include\..*' # Should find a comment
-
       - name: debug
         run: |
           echo "${{ fromJSON(steps.action.outputs.result) }}"
-
       - name: Find Comment
         uses: peter-evans/find-comment@v3
         id: fc
         with:
           issue-number: ${{ fromJSON(steps.action.outputs.result).comments[0].pull_request }}
           body-includes: ${{ needs.create-release.outputs.tag }}
-
   teardown:
     runs-on: ubuntu-latest
     needs: [create-release, assert]
@@ -69,13 +68,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Delete Test Release + Tag
         if: needs.create-release.result == 'success'
         run: gh release delete ${{ needs.create-release.outputs.name }} --cleanup-tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: octokit/request-action@v2.x
         name: Delete Test Release Comment
         if: ${{ always() && needs.assert.outputs.comment-id != 0 }}
