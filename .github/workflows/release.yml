@@ -10,6 +10,5 @@ permissions:
 
 jobs:
   github-action:
-    if: "!startsWith(github.event.release.name, 'v0.0.0-test.')" # Do not run for test releases created by test-include.yml and test-exclude.yml
     uses: cloudposse-github-actions/.github/.github/workflows/shared-release-branches.yml@main
     secrets: inherit
