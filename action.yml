@@ -120,15 +120,18 @@ runs:
           }
 
           // Find a previous release in order to find commits and later use them to find associated pull requests.
-          releases = await github.rest.repos.listReleases({
+          // This must be paginated: releases are returned newest-first by creation date (not publication date),
+          // so a release published from a long-lived draft can sit well beyond the first page.
+          releases = await github.paginate(github.rest.repos.listReleases, {
             owner: context.repo.owner,
-            repo: context.repo.repo,            
+            repo: context.repo.repo,
+            per_page: 100,
           });
 
           previousRelease = null;
           currentReleaseFound = false;
           console.log(`Looking for a release prior to ${currentTag}...`);
-          for (release of releases.data) {
+          for (release of releases) {
             if (currentReleaseFound && (release.target_commitish != currentRelease.target_commitish || !release.target_commitish.match(/[0-9a-f]{40}/))) {
               // In test scenarios where a positive test scenario release and a negative test scenario are created at from the same target_commitish,
               // we want to avoid setting this release as the previous (base) release, as no commits will be found when comparing the two.
@@ -143,10 +146,14 @@ runs:
           }
 
           if (previousRelease == null) {
+            // 'core.setFailed' does not halt execution, so return explicitly. Otherwise the 'compareCommits' call
+            // below dereferences a null 'previousRelease' and the resulting TypeError masks the message above.
             core.setFailed(`This action requires that at least one release prior to ${currentTag} exists, regardless of "include_regex".`);
-          } else {
-            console.log(`Found a prior release to "${currentTag}": "${previousRelease.tag_name}"`);
+            return {
+              "comments": []
+            };
           }
+          console.log(`Found a prior release to "${currentTag}": "${previousRelease.tag_name}"`);
 
           // Compare commits, as a pre-requisuite for finding associated pull requests.
           commitsResponse = await github.rest.repos.compareCommits({
