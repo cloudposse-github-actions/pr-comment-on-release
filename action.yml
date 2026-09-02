@@ -129,6 +129,7 @@ runs:
           });
 
           previousRelease = null;
+          previousReleaseFallback = null;
           currentReleaseFound = false;
           console.log(`Looking for a release prior to ${currentTag}...`);
           for (release of releases) {
@@ -138,11 +139,26 @@ runs:
               // However, we obviously want to account for normal scenarios where the target_commitish of two releases is the same and is not a SHA,
               // for example two releases with target_commmitish as 'main'. This is seemingly the best way to infer this given the limited information
               // returned by the listReleases endpoint.
-              previousRelease = release;
-              break;
+              if (previousReleaseFallback == null) {
+                previousReleaseFallback = release;
+              }
+              // Prefer a previous release whose tag also matches 'include_regex'. In a monorepo with per-module
+              // tags the immediately preceding release usually belongs to an unrelated module, which would make
+              // the comparison range - and therefore the pull requests commented on - arbitrary.
+              if (release.tag_name.match(pattern)) {
+                previousRelease = release;
+                break;
+              }
             } else if (release.tag_name == currentTag) {
               currentReleaseFound = true;
             }
+          }
+
+          if (previousRelease == null && previousReleaseFallback != null) {
+            // Preserve the previous behaviour when 'include_regex' matches no prior release at all, so that repos
+            // releasing a module for the first time (and this action's own test workflows) keep working.
+            core.warning(`No release prior to ${currentTag} matches the supplied 'include_regex'. Falling back to "${previousReleaseFallback.tag_name}".`);
+            previousRelease = previousReleaseFallback;
           }
 
           if (previousRelease == null) {
