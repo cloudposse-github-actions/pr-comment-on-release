@@ -120,33 +120,56 @@ runs:
           }
 
           // Find a previous release in order to find commits and later use them to find associated pull requests.
-          releases = await github.rest.repos.listReleases({
+          // This must be paginated: releases are returned newest-first by creation date (not publication date),
+          // so a release published from a long-lived draft can sit well beyond the first page.
+          const releases = await github.paginate(github.rest.repos.listReleases, {
             owner: context.repo.owner,
-            repo: context.repo.repo,            
+            repo: context.repo.repo,
+            per_page: 100,
           });
 
-          previousRelease = null;
-          currentReleaseFound = false;
+          let previousRelease = null;
+          let previousReleaseFallback = null;
+          let currentReleaseFound = false;
           console.log(`Looking for a release prior to ${currentTag}...`);
-          for (release of releases.data) {
+          for (const release of releases) {
             if (currentReleaseFound && (release.target_commitish != currentRelease.target_commitish || !release.target_commitish.match(/[0-9a-f]{40}/))) {
               // In test scenarios where a positive test scenario release and a negative test scenario are created at from the same target_commitish,
               // we want to avoid setting this release as the previous (base) release, as no commits will be found when comparing the two.
               // However, we obviously want to account for normal scenarios where the target_commitish of two releases is the same and is not a SHA,
               // for example two releases with target_commmitish as 'main'. This is seemingly the best way to infer this given the limited information
               // returned by the listReleases endpoint.
-              previousRelease = release;
-              break;
+              if (previousReleaseFallback == null) {
+                previousReleaseFallback = release;
+              }
+              // Prefer a previous release whose tag also matches 'include_regex'. In a monorepo with per-module
+              // tags the immediately preceding release usually belongs to an unrelated module, which would make
+              // the comparison range - and therefore the pull requests commented on - arbitrary.
+              if (release.tag_name.match(pattern)) {
+                previousRelease = release;
+                break;
+              }
             } else if (release.tag_name == currentTag) {
               currentReleaseFound = true;
             }
           }
 
-          if (previousRelease == null) {
-            core.setFailed(`This action requires that at least one release prior to ${currentTag} exists, regardless of "include_regex".`);
-          } else {
-            console.log(`Found a prior release to "${currentTag}": "${previousRelease.tag_name}"`);
+          if (previousRelease == null && previousReleaseFallback != null) {
+            // Preserve the previous behaviour when 'include_regex' matches no prior release at all, so that repos
+            // releasing a module for the first time (and this action's own test workflows) keep working.
+            core.warning(`No release prior to ${currentTag} matches the supplied 'include_regex'. Falling back to "${previousReleaseFallback.tag_name}".`);
+            previousRelease = previousReleaseFallback;
           }
+
+          if (previousRelease == null) {
+            // 'core.setFailed' does not halt execution, so return explicitly. Otherwise the 'compareCommits' call
+            // below dereferences a null 'previousRelease' and the resulting TypeError masks the message above.
+            core.setFailed(`This action requires that at least one release prior to ${currentTag} exists, regardless of "include_regex".`);
+            return {
+              "comments": []
+            };
+          }
+          console.log(`Found a prior release to "${currentTag}": "${previousRelease.tag_name}"`);
 
           // Compare commits, as a pre-requisuite for finding associated pull requests.
           commitsResponse = await github.rest.repos.compareCommits({
