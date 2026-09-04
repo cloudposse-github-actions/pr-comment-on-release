@@ -85,6 +85,10 @@ This action returns a JSON-encoded string, which contains information on the com
 
 
 
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+
 ## Inputs
 <!-- markdownlint-disable -->
 | Name | Description | Default | Required |
@@ -193,7 +197,7 @@ All other trademarks referenced herein are the property of their respective owne
 
 
 ---
-Copyright © 2017-2025 [Cloud Posse, LLC](https://cpco.io/copyright)
+Copyright © 2017-2026 [Cloud Posse, LLC](https://cpco.io/copyright)
 
 
 <a href="https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/pr-comment-on-release&utm_content=readme_footer_link"><img alt="README footer" src="https://cloudposse.com/readme/footer/img"/></a>
